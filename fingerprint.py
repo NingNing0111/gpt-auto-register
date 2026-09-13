@@ -18,28 +18,16 @@ import random
 # ---------------------------------------------------------------------------
 _SAFARI_VERSIONS = [
     {
-        "impersonate": "safari15_3",
-        "safari_ver": "15.3",
-        "webkit_ver": "605.1.15",
-        "macos_versions": ["10_15_7", "12_0", "12_1"],
-    },
-    {
-        "impersonate": "safari15_5",
-        "safari_ver": "15.5",
-        "webkit_ver": "605.1.15",
-        "macos_versions": ["10_15_7", "12_4", "12_5"],
-    },
-    {
-        "impersonate": "safari17_0",
-        "safari_ver": "17.0",
-        "webkit_ver": "605.1.15",
-        "macos_versions": ["13_6", "14_0", "14_1"],
-    },
-    {
         "impersonate": "safari18_0",
         "safari_ver": "18.0",
         "webkit_ver": "605.1.15",
-        "macos_versions": ["14_4", "14_5", "15_0", "15_1"],
+        "macos_versions": ["10_15_7"],  # Apple 从 macOS 11 起冻结 UA 中的版本号
+    },
+    {
+        "impersonate": "safari260",
+        "safari_ver": "26.0",
+        "webkit_ver": "605.1.15",
+        "macos_versions": ["10_15_7"],  # macOS Tahoe，UA 仍冻结为 10_15_7
     },
 ]
 
@@ -56,16 +44,22 @@ _MAC_SCREENS = [
 # ---------------------------------------------------------------------------
 _IOS_SAFARI_VERSIONS = [
     {
-        "impersonate": "safari17_2_ios",
-        "safari_ver": "17.2",
-        "webkit_ver": "605.1.15",
-        "ios_versions": ["17_1_2", "17_2"],
-    },
-    {
         "impersonate": "safari18_0_ios",
         "safari_ver": "18.0",
         "webkit_ver": "605.1.15",
         "ios_versions": ["18_0", "18_1", "18_1_1"],
+    },
+    {
+        "impersonate": "safari18_4_ios",
+        "safari_ver": "18.4",
+        "webkit_ver": "605.1.15",
+        "ios_versions": ["18_4", "18_4_1"],
+    },
+    {
+        "impersonate": "safari260_ios",
+        "safari_ver": "26.0",
+        "webkit_ver": "605.1.15",
+        "ios_versions": ["26_0", "26_1"],
     },
 ]
 
@@ -78,25 +72,23 @@ _IPHONE_SCREENS = [
 
 # ---------------------------------------------------------------------------
 # Chrome (Windows)
+# sec_ch_ua / sec_ch_ua_full_version_list 直接取自 curl_cffi 实际发出的值，
+# 品牌顺序按 Chromium GREASE 算法随版本变化，不能自己拼接！
 # ---------------------------------------------------------------------------
 _CHROME_VERSIONS = [
-    {
-        "impersonate": "chrome136",
-        "ver": "136",
-        "full_ver": "136.0.0.0",
-        "not_a_brand": '"Not.A/Brand";v="99"',
-    },
-    {
-        "impersonate": "chrome142",
-        "ver": "142",
-        "full_ver": "142.0.0.0",
-        "not_a_brand": '"Not/A)Brand";v="8"',
-    },
     {
         "impersonate": "chrome146",
         "ver": "146",
         "full_ver": "146.0.0.0",
-        "not_a_brand": '"Not?A_Brand";v="99"',
+        "sec_ch_ua": '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"',
+        "sec_ch_ua_full_version_list": '"Chromium";v="146.0.0.0", "Not-A.Brand";v="24.0.0.0", "Google Chrome";v="146.0.0.0"',
+    },
+    {
+        "impersonate": "chrome150",
+        "ver": "150",
+        "full_ver": "150.0.0.0",
+        "sec_ch_ua": '"Not;A=Brand";v="8", "Chromium";v="150", "Google Chrome";v="150"',
+        "sec_ch_ua_full_version_list": '"Not;A=Brand";v="8.0.0.0", "Chromium";v="150.0.0.0", "Google Chrome";v="150.0.0.0"',
     },
 ]
 
@@ -112,8 +104,8 @@ _WIN_SCREENS = [
 # Firefox (Windows)
 # ---------------------------------------------------------------------------
 _FIREFOX_VERSIONS = [
-    {"impersonate": "firefox133", "ver": "133.0"},
     {"impersonate": "firefox144", "ver": "144.0"},
+    {"impersonate": "firefox147", "ver": "147.0"},
 ]
 
 # ---------------------------------------------------------------------------
@@ -484,21 +476,11 @@ def _gen_ios_safari(r: random.Random) -> dict:
 def _gen_chrome(r: random.Random) -> dict:
     chrome = r.choice(_CHROME_VERSIONS)
     others = [c["impersonate"] for c in _CHROME_VERSIONS if c["impersonate"] != chrome["impersonate"]]
-    sec_ch_ua = (
-        f'"Chromium";v="{chrome["ver"]}", '
-        f'"Google Chrome";v="{chrome["ver"]}", '
-        f'{chrome["not_a_brand"]}'
-    )
-    # Client Hints 全套：full-version-list 带完整版本号
-    sec_ch_ua_full_version_list = (
-        f'"Chromium";v="{chrome["full_ver"]}", '
-        f'"Google Chrome";v="{chrome["full_ver"]}", '
-        f'{chrome["not_a_brand"]}'  # Not.A/Brand 保持主版本号
-    )
-    # Windows 10 的 NT 版本对应表：10.0.19041+ 对应不同 build
-    # 常见 User-Visible 版本：21H2(19044)、22H2(19045)、Win11 21H2(22000)、22H2(22621)
-    # 这里选择 Windows 10 22H2(19045) 和 Windows 11 23H2(22631) 的真实对应
-    win_platform_versions = ["10.0.19045", "15.0.0"]  # Win10 22H2 / Win11 (UA 里说 10.0 但 CH 可报 15)
+    # sec-ch-ua 直接用预存值（品牌顺序随版本变化，不能自己拼）
+    sec_ch_ua = chrome["sec_ch_ua"]
+    sec_ch_ua_full_version_list = chrome["sec_ch_ua_full_version_list"]
+    # Windows 10 22H2(19045) / Windows 11 (UA 里说 10.0 但 CH 可报 15)
+    win_platform_versions = ["10.0.19045", "15.0.0"]
     platform_version = r.choice(win_platform_versions)
 
     return {
@@ -516,7 +498,7 @@ def _gen_chrome(r: random.Random) -> dict:
         "sec_ch_ua_full_version_list": sec_ch_ua_full_version_list,
         "sec_ch_ua_arch": '"x86"',
         "sec_ch_ua_bitness": '"64"',
-        "sec_ch_ua_model": '""',  # 桌面 Chrome model 为空串（引号包空串）
+        "sec_ch_ua_model": '""',
         "sec_ch_ua_platform_version": f'"{platform_version}"',
         "screen": r.choice(_WIN_SCREENS),
     }
@@ -675,16 +657,8 @@ def fingerprint_for_impersonate(impersonate: str, current_fp: dict) -> dict:
     fp["user_agent"] = ua_for_impersonate(impersonate, fp.get("user_agent", ""))
 
     if t == "chrome":
-        fp["sec_ch_ua"] = (
-            f'"Chromium";v="{d["ver"]}", '
-            f'"Google Chrome";v="{d["ver"]}", '
-            f'{d["not_a_brand"]}'
-        )
-        fp["sec_ch_ua_full_version_list"] = (
-            f'"Chromium";v="{d["full_ver"]}", '
-            f'"Google Chrome";v="{d["full_ver"]}", '
-            f'{d["not_a_brand"]}'
-        )
+        fp["sec_ch_ua"] = d["sec_ch_ua"]
+        fp["sec_ch_ua_full_version_list"] = d["sec_ch_ua_full_version_list"]
         # platform/mobile/arch/bitness/model/platform_version 只跟设备走，
         # 不随 Chrome 版本变，沿用原指纹即可（缺失时给桌面 Windows 默认值）
         fp.setdefault("sec_ch_ua_platform", '"Windows"')

@@ -159,10 +159,12 @@ class AuthFlow:
             "1", "true", "yes", "on"
         )
         self._trace_dump_path = ""
-        logger.debug(
-            f"指纹: impersonate={self._fingerprint['impersonate']} "
+        logger.info(
+            f"指纹: type={self._fingerprint['browser_type']} "
+            f"impersonate={self._fingerprint['impersonate']} "
             f"screen={self._fingerprint['screen']} lang={self._fingerprint['lang']} "
-            f"ua={self._ua}"
+            f"tz={self._fingerprint.get('timezone', '')} "
+            f"ua={self._ua[:80]}"
         )
 
     def _build_chatgpt_cookie_header(self) -> str:
@@ -1791,13 +1793,20 @@ class AuthFlow:
                     new_imp = self._fingerprint["impersonate"]
                     self._impersonate_candidates = self._fingerprint.get(
                         "fallback_impersonates",
-                        [new_imp, "safari17_0", "safari15_5"],
+                        [new_imp],
                     )
                     self._impersonate_idx = 0
                     self.session = create_http_session(
                         proxy=self.config.proxy,
                         impersonate=new_imp,
                         user_agent=self._ua,
+                    )
+                    logger.info(
+                        f"指纹(IP联动): type={self._fingerprint['browser_type']} "
+                        f"impersonate={new_imp} "
+                        f"lang={self._fingerprint['lang']} "
+                        f"tz={self._fingerprint.get('timezone', '')} "
+                        f"ua={self._ua[:80]}"
                     )
             else:
                 logger.warning(f"网络探测异常: cloudflare trace {resp.status_code}")
