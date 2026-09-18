@@ -1,0 +1,20 @@
+services:
+  webui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gpt-auto-register:latest
+    container_name: gpt-auto-register
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    volumes:
+      # 持久化号池 + 已注册凭证（SQLite，含 WAL 伴随文件）。
+      # 数据落在宿主机 ./data 下，容器重建 / 升级都不丢号。
+      - ./data:/app/data
+    environment:
+      # 把 SQLite 数据库指到挂载的数据卷里
+      - DB_PATH=/app/data/webui.db
+      # - TZ=Asia/Shanghai                          # 可选：容器时区
+      # - PROXY=socks5://user:pass@host:port        # 可选：全局出口代理
+      # - OPENAI_SENTINEL_NODE_PATH=/usr/bin/node   # 可选：node 路径（默认已在 PATH 里）

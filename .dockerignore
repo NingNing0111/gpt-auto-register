@@ -1,0 +1,48 @@
+# ─── VCS / 工具 ───
+.git
+.gitignore
+.omc
+
+# ─── 敏感数据（绝不能进镜像）──
+webui/webui.db
+webui/webui.db-shm
+webui/webui.db-wal
+webui/webui.db-journal
+*.db.bak
+*.db.backup
+*.sqlite
+*.sqlite3
+data
+outputs
+*.log
+account_*.json
+*.session
+*.token
+mail.txt
+accounts.txt
+outlook_accounts.txt
+.env
+.env.local
+config.local.json
+secrets.json
+
+# ─── 前端源码（运行时只用到 webui/static 已构建产物）──
+webui/frontend
+node_modules
+openai-sentinel-demo
+
+# ─── Python 缓存 / 虚拟环境 ───
+__pycache__
+*.py[cod]
+.venv
+venv
+env
+ENV
+.pytest_cache
+.coverage
+
+# ─── IDE / OS ───
+.idea
+.vscode
+.DS_Store
+Thumbs.db

@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import sqlite3
 import sys
 import threading
@@ -30,7 +31,13 @@ _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-DB_PATH = Path(__file__).resolve().parent / "webui.db"
+# 数据库文件位置。Docker 部署时用 DB_PATH 环境变量指到挂载的数据卷，
+# 保证容器重启 / 重建后号池与已注册凭证不丢。默认仍放 webui/ 下，行为不变。
+DB_PATH = Path(
+    os.environ.get("DB_PATH") or (Path(__file__).resolve().parent / "webui.db")
+)
+# 确保 DB 所在目录存在（sqlite3.connect 不会自动建父目录）
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 _lock = threading.Lock()  # SQLite 写入串行化
 

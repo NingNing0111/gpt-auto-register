@@ -109,6 +109,32 @@ python start_webui.py
 - 新版本会自动执行 DB migration（添加新表），**不会删除**已有数据
 - 如果担心出问题，先 `cp webui.db webui.db.backup` 备份
 
+#### Docker 部署（最省事，免装 Python / Node）
+
+```bash
+# 1. 克隆代码（已 clone 可跳过）
+git clone https://github.com/Regert888/gpt-outlook-register.git
+cd gpt-outlook-register
+
+# 2. 构建并启动（首次会自动装 Python 依赖 + Node.js）
+docker compose up -d --build
+
+# 3. 浏览器访问
+#    http://服务器IP:8765
+```
+
+- 号池 / 已注册凭证持久化在宿主机 `./data/webui.db`，容器重启、重建、升级都不丢号。
+- 镜像已内置 Node.js，QuickJS sentinel 取 OTP 路径开箱即用。
+- 常用命令：
+
+  ```bash
+  docker compose logs -f          # 看日志
+  docker compose down             # 停止
+  docker compose up -d --build    # 更新代码后重建
+  ```
+
+- 可选环境变量（`docker-compose.yml` 里按需放开）：`PROXY`（全局出口代理）、`TZ`（时区）。
+
 ---
 
 WebUI 提供：
